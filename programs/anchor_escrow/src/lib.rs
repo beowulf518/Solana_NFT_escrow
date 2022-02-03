@@ -93,7 +93,6 @@ pub mod anchor_escrow {
         {
             return Err(ProgramError::InvalidAccountData)
         }
-
         if ctx.accounts.escrow_info.seller != ctx.accounts.initializers_main_account.key(){
             return Err(ProgramError::InvalidAccountData);
         }
@@ -132,9 +131,9 @@ pub mod anchor_escrow {
         let (metadata_key, _metadata_bump_seed) =
             Pubkey::find_program_address(metadata_seeds, &ctx.accounts.token_meta_program.key());
         
-        msg!("metadata_key {}", metadata_key);
-        msg!("metadata_info.key {}", ctx.accounts.metadata_info.key);
-        msg!("token_meta_program {}", ctx.accounts.token_meta_program.key());
+        //msg!("metadata_key {}", metadata_key);
+        //msg!("metadata_info.key {}", ctx.accounts.metadata_info.key);
+        //msg!("token_meta_program {}", ctx.accounts.token_meta_program.key());
         // validation check for correct accounts send from the client side
         if *ctx.accounts.metadata_info.key != metadata_key{
             return Err(ProgramError::InvalidAccountData);
@@ -144,14 +143,14 @@ pub mod anchor_escrow {
         let size = ctx.accounts.escrow_info.amount;
 
         // unpack the metadata from the metadata pda
-        let metadata = Metadata::from_account_info(&ctx.accounts.metadata_info)?;
+        //let metadata = Metadata::from_account_info(&ctx.accounts.metadata_info)?;
 
         // seller fee basis points from the metadata
-        /*let fees = metadata.data.seller_fee_basis_points;
-        let total_fee = ((fees as u64)*size)/10000;
+        //let fees = metadata.data.seller_fee_basis_points;
+        //let total_fee = ((fees as u64)*size)/10000;
 
         let mut remaining_fee = size;
-        match metadata.data.creators {
+        /*match metadata.data.creators {
             Some(creators) => {
                 for creator in creators {
                     let pct = creator.share as u64;
@@ -175,20 +174,21 @@ pub mod anchor_escrow {
             None => {
                 msg!("No creators found in metadata");
             }
-        }
-
-        token::transfer(
-            ctx.accounts.transfer_to_initializer(),
-            remaining_fee,
-        )?;
-
+        }*/
+        msg!("remaining fee {}", remaining_fee);
+        //token::transfer(
+        //    ctx.accounts.transfer_to_initializer(),
+        //    remaining_fee,
+        //)?;
+        msg!("authority {}", ctx.accounts.token_account_authority.key());
+        msg!("owner {}", ctx.accounts.pdas_token_account.owner);
         token::set_authority(
             ctx.accounts.set_authority_context(),
             AuthorityType::AccountOwner,
             Some(ctx.accounts.buyer.key()),
         )?;
 
-        ctx.accounts.escrow_info.is_initialized = false;*/
+        ctx.accounts.escrow_info.is_initialized = false;
         Ok(())
     }
 
@@ -229,6 +229,8 @@ pub mod anchor_escrow {
             return Err(ProgramError::InvalidAccountData);
         }
         
+        msg!("owner {}", ctx.accounts.pdas_token_account.owner);
+        
         token::set_authority(
             ctx.accounts.set_authority_context(),
             AuthorityType::AccountOwner,
@@ -258,7 +260,7 @@ impl<'info> Buy<'info> {
             account_or_mint: self.pdas_token_account.to_account_info().clone(),
             current_authority: self.token_account_authority.clone(),
         };
-        CpiContext::new(self.token_program.clone(), cpi_accounts)
+        CpiContext::new(self.initializers_main_account.clone(), cpi_accounts)
     }
 
     fn transfer_to_pda_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
